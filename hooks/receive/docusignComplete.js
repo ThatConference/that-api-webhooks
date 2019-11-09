@@ -4,7 +4,7 @@
 //import axios from 'axios'
 const axios = require('axios')
 const Sentry = require('@sentry/node')
-const {parseDocuSignXml} = require('../parsers/docuSign')
+const {parseDocuSignXml} = require('../../parsers/docuSign')
 
 Sentry.init({ dsn: process.env.SENTRY_NODE_DSN })
 
