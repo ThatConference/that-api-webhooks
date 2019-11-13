@@ -4,7 +4,7 @@
   "description": "THAT api automation webhooks",
   "main": "index.js",
   "scripts": {
-    "test": "\"\"",
+    "test": "mocha",
     "start:local": "nodemon --exec functions-framework --target=hooks"
   },
   "repository": {
@@ -26,14 +26,17 @@
     "node": "10.x"
   },
   "dependencies": {
-    "@sentry/node": "^5.7.1",
+    "@sentry/node": "^5.8.0",
     "axios": "^0.19.0",
+    "chai-as-promised": "^7.1.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "xml2js": "^0.4.22"
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^1.3.2",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.2",
     "nodemon": "^1.19.4"
   }
 }
