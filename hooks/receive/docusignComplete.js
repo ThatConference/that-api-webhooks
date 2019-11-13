@@ -40,8 +40,9 @@ const usePayload = (payload, res) => {
   parseDocuSignXml(payload)
     .then(docusign => {
       if (!docusign) {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.write('Unknown DocuSign template, skipping. See log for details');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        const j = { result: 'Unknown Template', status: 'Unknown DocuSign template, skipping. See log for details' };
+        res.write(JSON.stringify(j));
         res.end();
         return;
       }

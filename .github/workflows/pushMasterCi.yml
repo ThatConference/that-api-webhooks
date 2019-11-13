@@ -1,0 +1,23 @@
+# Validate lint, build, and tests on PR
+name: PullReq CI
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/chechout@master
+      - name: Use node.js 10.x
+        uses: actions/setup-node@master
+        with:
+          node-version: 10.x
+      - name: npm ci, run
+        run: |
+          cp .env.sample .env
+          npm ci
+          npm run lint
+          npm run test
