@@ -1,5 +1,7 @@
 exports.auth = (req, res, next) => {
-  const credslist = process.env.AUTH_CREDS_LIST.split(',');
+  // eslint-disable-next-line no-bitwise
+  const authcreds = process.env.AUTH_CREDS_LIST | '';
+  const credslist = authcreds.split(',');
   console.log(`doing auth stuff, req: ${req.method} ${req.url}`);
   // console.log(`headers`, req.headers);
   // console.log('qs', req.query);
