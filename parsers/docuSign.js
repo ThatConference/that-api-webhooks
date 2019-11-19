@@ -81,6 +81,12 @@ const parseDocuSign = docusignObj => {
       case fields.partnerDateSigned:
         du.dateSigned = f.value;
         break;
+      case fields.event:
+        du.event = f.value;
+        break;
+      case fields.eventYear:
+        du.eventYear = f.value;
+        break;
       default:
         du.extraFormFields.push(f.value);
     }
