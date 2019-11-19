@@ -12,5 +12,10 @@
 # below:
 .git
 .gitignore
+.github/
 
-node_modules
+node_modules/
+test/
+.vscode/
+.prettierrc
+.eslint.json

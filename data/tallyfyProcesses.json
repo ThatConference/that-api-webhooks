@@ -1,0 +1,37 @@
+[
+  {
+    "checklistTitle": "",
+    "checklistId": "",
+    "docusignTemplates": [],
+    "uploadLogoStepId": "",
+    "uploadLogoStepAlias": ""
+  },
+  {
+    "checklistTitle": "",
+    "checklistId": "",
+    "docusignTemplates": [],
+    "uploadLogoStepId": "",
+    "uploadLogoStepAlias": "",
+    "preloadFields": {
+      "organization": "",
+      "partnershipLevel": "",
+      "primaryContactName": "",
+      "primaryContactEmail": "",
+      "event": ""
+    }
+  },
+  {
+    "checklistTitle": "Test Partner Onboard",
+    "checklistId": "123456789",
+    "docusignTemplates": ["template1", "template2"],
+    "uploadLogoStepId": "0987654321",
+    "uploadLogoStepAlias": "logo-99",
+    "preloadFields": {
+      "organization": "1234",
+      "partnershipLevel": "2345",
+      "primaryContactName": "3456",
+      "primaryContactEmail": "4567",
+      "event": "WI"
+    }
+  }
+]
