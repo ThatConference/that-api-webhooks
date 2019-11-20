@@ -1,10 +1,8 @@
 // Catch completed docusign webhook
 // const axios = require('axios');
 const Sentry = require('@sentry/node');
-const { parseDocuSignXml } = require('../../parsers/docuSign');
+const { parseDocuSignXml } = require('../../parsers/docusign');
 const sendTallyfy = require('../send/tallyfy').send;
-
-Sentry.init({ dsn: process.env.SENTRY_NODE_DSN });
 
 module.exports = (req, res) => {
   console.log('trigger docusignComplete');
@@ -54,11 +52,13 @@ const usePayload = (payload, res) => {
             console.error(`undefined result from sendTallyfy in docusignComplete`);
             res.writeHead(500);
             res.end();
+            return;
           }
           // successful
           res.writeHead(200, { 'Conent-Type': 'application/json' });
           res.write(JSON.stringify(result));
           res.end();
+          console.log('docusignComplete done');
         })
         .catch(err => {
           console.error(`Exception in docusignComplete calling sendTallyfy:\n${err}`);

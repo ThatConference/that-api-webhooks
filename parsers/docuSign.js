@@ -1,3 +1,4 @@
+const Sentry = require('@sentry/node');
 const xml2js = require('xml2js');
 const docdata = require('../data/docusignFormFields.json');
 
@@ -7,9 +8,13 @@ const parseDocuSignXml = docusignXml =>
     .then(result => parseDocuSign(result))
     .catch(err => {
       console.error(`error in parseDocuSignXml while parsing with xml2js: ${err}`);
+      Sentry.captureException(err);
     });
 
 const parseDocuSign = docusignObj => {
+  if (!docusignObj || !docusignObj.DocuSignEnvelopeInformation) {
+    return undefined;
+  }
   const envlStatus = docusignObj.DocuSignEnvelopeInformation.EnvelopeStatus;
   const rstatus = docusignObj.DocuSignEnvelopeInformation.EnvelopeStatus.RecipientStatuses.RecipientStatus;
   const du = {

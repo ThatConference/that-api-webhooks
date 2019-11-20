@@ -12,6 +12,12 @@ if (process.env.TALLYFY_ORG_ID && process.env.TALLYFY_API_BASE && process.env.TA
   tallyfyIds.isMissingData = true;
 }
 
+const axiosRequestConfig = {
+  headers: {
+    Authorization: `Bearer ${tallyfyIds.accessToken}`,
+  },
+};
+
 // Can only add 1 guest at this time
 const updateStepPayload = {
   owners: {
@@ -20,7 +26,7 @@ const updateStepPayload = {
 };
 
 const sendTallyfy = {
-  send: docusign => {
+  send: async docusign => {
     if (tallyfyIds.isMissingData) {
       console.error(`Missing environment variable data for TallyFy`);
       return undefined;
@@ -35,24 +41,38 @@ const sendTallyfy = {
     // build create payload
     const createRunPayload = sendTallyfy.buildCreatePayload(docusign, process);
     // Create run at Tallyfy
-    return sendTallyfy.createRun(createRunPayload).then(result => {
-      if (!result) {
-        return undefined;
+    const rundata = await sendTallyfy.createRun(createRunPayload);
+    if (!rundata) {
+      return undefined;
+    }
+    // Next query run to get task id's created.
+    const runtasks = await sendTallyfy.getTasksFromRun(rundata.id);
+    if (!runtasks) {
+      return undefined;
+    }
+    // Pre-defined steps we want to update, need task id's for these
+    const { stepsToUpdate } = process;
+    const tasksToUpdate = [];
+    runtasks.forEach(task => {
+      if (stepsToUpdate.find(s => s.id === task.step_id)) {
+        tasksToUpdate.push(task);
       }
-      const rdata = JSON.parse(result.data);
-      // build put payload
-      updateStepPayload.owners[0] = docusign.primaryContactEmail;
-      const uri = `${tallyfyIds.apiBase}/organizations/${tallyfyIds.orgId}/runs/${rdata.run_id}/tasks/${process.uploadLogoStepid}`;
-      return sendTallyfy.updateTask(uri).then(taskResult => {
-        return {
-          process: createRunPayload.name,
-          summary: createRunPayload.summary,
-          runId: result.id,
-          checklist_id: result.checklist_id,
-          stepRunId: taskResult.run_id,
-          createdAt: result.created_at,
-        };
-      });
+    });
+    // Now we update each taskToUdpdate using PUT request
+    updateStepPayload.owners.guests[0] = docusign.email;
+
+    return sendTallyfy.updateManyTasks(rundata.id, tasksToUpdate).then(result => {
+      if (!result.tasks) {
+        return result;
+      }
+      return {
+        process: createRunPayload.name,
+        summary: createRunPayload.summary,
+        runId: rundata.id,
+        checklist_id: process.checklistId,
+        createdAt: rundata.created_at,
+        tasksUpdated: result.tasks,
+      };
     });
   },
   buildCreatePayload: (docusign, process) => {
@@ -73,14 +93,14 @@ const sendTallyfy = {
   createRun: postPayload => {
     const uri = `${tallyfyIds.apiBase}/organizations/${tallyfyIds.orgId}/runs`;
     return axios
-      .post(uri, postPayload)
+      .post(uri, postPayload, axiosRequestConfig)
       .then(result => {
         if (result.status < 200 || result.status > 299) {
           console.error(`Issue sending hook to Tallyfy. Status: ${result.status}`);
           Sentry.captureMessage(`Issue sending hook to Tallyfy:\n${result}`);
           return undefined;
         }
-        return result;
+        return result.data.data;
       })
       .catch(err => {
         console.error(`Exception sending hook to tally:\n${err}`);
@@ -88,19 +108,74 @@ const sendTallyfy = {
         return undefined;
       });
   },
-  updateTask: uri => {
+  getTasksFromRun: runid => {
+    const uri = `${tallyfyIds.apiBase}/organizations/${tallyfyIds.orgId}/runs/${runid}?with=tasks`;
     return axios
-      .put(uri, updateStepPayload)
+      .get(uri, axiosRequestConfig)
+      .then(r => {
+        if (r.status < 200 || r.status > 299) {
+          console.error(`Issue sending GET to tallyfy. status: ${r.status}`);
+          Sentry.captureMessage(`Issue sending PUT to tallyfy: ${r}`);
+          return undefined;
+        }
+        if (r.data && r.data.data && r.data.data.tasks) {
+          return r.data.data.tasks.data;
+        }
+        return undefined;
+      })
+      .catch(e => {
+        console.error(`Exception sending GET to tallyfy:\n${uri}\n${e}`);
+        Sentry.captureException(e);
+        return undefined;
+      });
+  },
+  updateTask: (runid, task) => {
+    const uri = `${tallyfyIds.apiBase}/organizations/${tallyfyIds.orgId}/runs/${runid}/tasks/${task.id}`;
+    return axios
+      .put(uri, updateStepPayload, axiosRequestConfig)
       .then(result => {
         if (result.status < 200 || result.status > 299) {
           console.error(`Issue sending PUT to tallyfy. status: ${result.status}`);
           Sentry.captureMessage(`Issue sending PUT to tallyfy: ${result}`);
           return {};
         }
-        return result;
+        return result.data.data;
       })
       .catch(err => {
         console.error(`Exception sending put to Tallyfy:\n${err}`);
+        Sentry.captureException(err);
+        return {};
+      });
+  },
+  updateManyTasks: (runid, tasklist) => {
+    const reqFunctions = [];
+    const config = axiosRequestConfig;
+    // Config so Promise will not be rejected for status <200, >299
+    config.validateStatus = () => {
+      return true;
+    };
+    tasklist.forEach(task => {
+      const uri = `${tallyfyIds.apiBase}/organizations/${tallyfyIds.orgId}/runs/${runid}/tasks/${task.id}`;
+      reqFunctions.push(axios.put(uri, updateStepPayload, config));
+    });
+    return axios
+      .all(reqFunctions)
+      .then(responses => {
+        const ret = { tasks: [] };
+        const d = {};
+        responses.forEach(response => {
+          d.response = response.status;
+          if (response.data.data) {
+            d.taskid = response.data.data.id;
+            d.tasktitle = response.data.data.title;
+          }
+          d.uri = response.config.url;
+          ret.tasks.push(d);
+        });
+        return ret;
+      })
+      .catch(err => {
+        console.error(`Issue updating tasks for run ${runid}:\n${err}`);
         Sentry.captureException(err);
         return {};
       });

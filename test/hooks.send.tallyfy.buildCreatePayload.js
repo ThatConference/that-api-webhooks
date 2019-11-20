@@ -4,21 +4,7 @@ const { expect } = chai;
 const { buildCreatePayload } = require('../hooks/send/tallyfy');
 
 const docusignParsed = require('./fixtures/docusignParsed');
-
-const process = {
-  checklistTitle: 'Checklist title',
-  checklistId: 'checklistid123456789',
-  docusignTemplates: ['template1', 'template2'],
-  uploadLogoStepId: 'uploadlogostepid0987654321',
-  uploadLogoStepAlias: 'logoalias-99',
-  preloadFields: {
-    organization: 'preloadfield-org',
-    partnershipLevel: 'preloadfield-level',
-    primaryContactName: 'preloadfield-name',
-    primaryContactEmail: 'preloadfield-email',
-    event: 'preloadfield-event',
-  },
-};
+const process = require('./fixtures/tallyfyProcess');
 
 let builtPayload = {};
 builtPayload = buildCreatePayload(docusignParsed, process);
