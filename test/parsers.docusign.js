@@ -2,7 +2,7 @@ const fs = require('fs');
 const chai = require('chai');
 
 const { expect } = chai;
-const { parseDocuSignXml } = require('../parsers/docuSign');
+const { parseDocuSignXml } = require('../parsers/docusign');
 
 describe(`parsers.docusign.parseDocuSignXml`, function() {
   describe(`Parse expected envelope and form fields from xml`, function() {
