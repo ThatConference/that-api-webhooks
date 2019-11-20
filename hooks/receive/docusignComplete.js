@@ -1,9 +1,8 @@
 // Catch completed docusign webhook
-const axios = require('axios');
+// const axios = require('axios');
 const Sentry = require('@sentry/node');
-const { parseDocuSignXml } = require('../../parsers/docuSign');
-
-Sentry.init({ dsn: process.env.SENTRY_NODE_DSN });
+const { parseDocuSignXml } = require('../../parsers/docusign');
+const sendTallyfy = require('../send/tallyfy').send;
 
 module.exports = (req, res) => {
   console.log('trigger docusignComplete');
@@ -46,29 +45,32 @@ const usePayload = (payload, res) => {
         res.end();
         return;
       }
-      axios
-        .post(process.env.ZAP_DOCUSIGN_IN_HOOK_URL, docusign)
-        .then(axresp => {
-          console.log(`axios res status ${axresp.status}`);
-          if (axresp.status < 200 || axresp.status > 299) {
-            console.error(`Issue sending hook. status ${axresp.status}`);
-            Sentry.captureMessage(`Issue sending webhook request: ${axresp}`);
+
+      sendTallyfy(docusign)
+        .then(result => {
+          if (!result) {
+            console.error(`undefined result from sendTallyfy in docusignComplete`);
+            res.writeHead(500);
+            res.end();
             return;
           }
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.write(JSON.stringify(docusign));
+          // successful
+          res.writeHead(200, { 'Conent-Type': 'application/json' });
+          res.write(JSON.stringify(result));
           res.end();
+          console.log('docusignComplete done');
         })
         .catch(err => {
-          console.error(err);
+          console.error(`Exception in docusignComplete calling sendTallyfy:\n${err}`);
           Sentry.captureException(err);
-          res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.write(err.message);
+          res.writeHead(500);
           res.end();
         });
     })
     .catch(err => {
       console.error(err);
+      Sentry.captureException(err);
+      res.writeHead(500);
       res.end();
     });
 };

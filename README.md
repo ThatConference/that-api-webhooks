@@ -30,3 +30,15 @@ $ curl -d "<data to post>" \
 -H "Content-Type: application/xml" \
 -X POST https://that.tech/endpoint?Basic=<Encoded username:password>
 ```
+
+## Docusign -> Tallyfy Configuration
+
+### Data files
+
+- **docusignFormFields.json**: By template, provides fields parsed from submitted document. The parsing is done in parsers/docusign.js.
+- **tallyfyProcesses.json**: By Tallyfy Bluepring (known as checklist in api), Provides id's and preload fields for "kick-off" form (prerun in api). Contains the following infomormation:
+  - Checklist title and id
+  - DocuSign template name this checklist is used for
+  - Preload field names to use in building create process payload to send to Tallyfy
+  - List of steps which will have guest email address set at creation. Step identifier used to get task id in a run
+    - Checklist steps when created into a run become tasks within that run. The tasks is updated by referencing the task id.
