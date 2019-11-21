@@ -28,6 +28,7 @@ const updateStepPayload = {
 const sendTallyfy = {
   send: async docusign => {
     if (tallyfyIds.isMissingData) {
+      Sentry.captureMessage('Missing environment variable data for Tallyfy', 'critical');
       console.error(`Missing environment variable data for TallyFy`);
       return undefined;
     }
