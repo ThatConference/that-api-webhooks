@@ -106,6 +106,9 @@ const sendTallyfy = {
       .catch(err => {
         console.error(`Exception sending hook to tally:\n${err}`);
         Sentry.captureException(err);
+        Sentry.configureScope(scope => {
+          scope.setExtra('postPayload', postPayload);
+        });
         return undefined;
       });
   },
