@@ -44,6 +44,8 @@ jobs:
           CLOUDSDK_CORE_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
       - name: Run GCP Deploy Function - webhooks
         run: gcloud functions deploy webhooks --runtime nodejs10 --trigger-http --entry-point hooks
+        env:
+          CLOUDSDK_CORE_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
       # - name: GCP Authentication
       #   uses: actions/gcloud/auth@master
       #   env:
