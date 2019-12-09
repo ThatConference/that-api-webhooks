@@ -23,6 +23,15 @@ jobs:
           npm ci
           npm run lint
           npm run test
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v2
+        with:
+          status: ${{ job.status }}
+          author: Push Master CI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DEV_NOTIFICATIONS }}
+        if: job.status == 'failure' || job.status == 'cancelled'
 
   deploy:
     name: Deploy
@@ -44,3 +53,12 @@ jobs:
         run: gcloud functions deploy webhooks --runtime nodejs10 --trigger-http --entry-point hooks
         env:
           CLOUDSDK_CORE_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v2
+        with:
+          status: ${{ job.status }}
+          author: Push Master CI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DEV_NOTIFICATIONS }}
+        if: always()
